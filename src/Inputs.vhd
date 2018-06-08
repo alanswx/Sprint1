@@ -51,8 +51,8 @@ signal E8_in				: std_logic_vector(3 downto 0);
 signal J9_out				: std_logic_vector(7 downto 0);
 signal E8_out				: std_logic_vector(9 downto 0);
 
-signal Steering1B_Q_n		: std_logic;
-signal Steering1A_Q		: std_logic;
+signal Steering1B_Q_n		        : std_logic;
+signal Steering1A_Q		        : std_logic;
 
 
 begin
@@ -89,7 +89,7 @@ end process;
 -- Steering
 M9: process(Steering1A_n, Steering1B_n, SteerRst1_n)
 begin
-	if SteerRst1_n <= '0' then -- Asynchronous clear
+	if SteerRst1_n = '0' then -- Asynchronous clear
 		Steering1B_Q_n <= '1';
 	elsif rising_edge(Steering1B_n) then -- Steering encoders are active low but inverted on board
 		Steering1A_Q <= Steering1A_n;
