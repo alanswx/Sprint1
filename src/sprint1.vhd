@@ -45,13 +45,20 @@ port(
 			Test_I		: in  std_logic;  -- Self-test switch
 			SteerA_I		: in  std_logic;	-- Steering wheel inputs, these are quadrature encoders
 			SteerB_I		: in	std_logic;
-			StartLamp_O	: out std_logic	-- Start button lamp
+			StartLamp_O	: out std_logic;	-- Start button lamp
+			hs_O: out std_logic;
+			vs_O: out std_logic;
+			hblank_O: out std_logic;
+			vblank_O: out std_logic;
+			clk_12: in std_logic;
+			clk_6_O: out std_logic
 			);
+			
 end sprint1;
 
 architecture rtl of sprint1 is
 
-signal clk_12			: std_logic;
+--signal clk_12			: std_logic;
 signal clk_6			: std_logic;
 signal phi1 			: std_logic;
 signal phi2				: std_logic;
@@ -154,11 +161,11 @@ begin
 SW1 <= "11000101"; -- Config dip switches
 
 -- PLL to generate 12.096 MHz clock
-PLL: entity work.clk_pll
-port map(
-		inclk0 => Clk_50_I,
-		c0 => clk_12
-		);
+--PLL: entity work.clk_pll
+--port map(-
+--		inclk0 => Clk_50_I,
+--		c0 => clk_12
+--		);
 		
 		
 Vid_sync: entity work.synchronizer
@@ -295,9 +302,17 @@ port map(
 		Audio1 => Audio1_O
 		);
 
+		
+		
 -- Video mixing	
 VideoB_O <= (not(BlackPF_n and Car2_n and Car3_4_n)) nor CompBlank_s;	
 VideoW_O <= not(WhitePF_n and Car1_n);  
 Sync_O <= CompSync_n_s;
 
+		hs_O<= hsync;
+		hblank_O <= HBlank;
+		vblank_O <= VBlank;
+		vs_O <=vsync;
+		clk_6_O<=clk_6;
+		
 end rtl;
