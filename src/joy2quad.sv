@@ -17,7 +17,7 @@
 module joy2quad
 (
 	input CLK,
-	input [7:0] clkdiv,
+	input [31:0] clkdiv,
 	
 	input right,
 	input left,
@@ -29,7 +29,7 @@ module joy2quad
 reg [3:0] state = 0;
 
 always @(posedge CLK) begin
- reg [7:0] count = 0;
+ reg [31:0] count = 0;
  if (count >0)
   begin 
 	count=count-1;

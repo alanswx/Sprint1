@@ -272,7 +272,7 @@ wire [1:0] steer;
 joy2quad steer1
 (
 	.CLK(CLK_VIDEO),
-	.clkdiv('d128),
+	.clkdiv('d22500),
 	
 	.right(m_right),
 	.left(m_left),
