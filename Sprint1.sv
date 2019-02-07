@@ -1,6 +1,6 @@
 //============================================================================
 //  Sprint1 port to MiSTer
-//  Copyright (c) 2019 alanswx
+//  Copyright (c) 2019 Alan Steremberg - alanswx
 //
 //   
 //============================================================================
@@ -120,10 +120,13 @@ assign LED_USER  = ioctl_download;
 localparam CONF_STR = {
 	"A.SPRINT1;;",
 	"-;",
+	"O1,Oil Slicks,On,Off;",
+	"O2,Cycle tracks,every lap,every two laps;",
+	"O3,Extended Play,extended,normal;",
+	"O45,Game time,150 Sec,120 Sec,90 Sec,60 Sec;",
 	"-;",
-	"-;",
-	"-;",
-	"-;",
+	"T6,Reset;",
+	"J,Gas,GearUp,GearDown,Start 1P,Start 2P;",
 	"V,v",`BUILD_DATE
 };
 
@@ -229,46 +232,105 @@ reg btn_fire  = 0;
 reg btn_one_player  = 0;
 reg btn_two_players = 0;
 
-wire m_up     = status[2] ? btn_left  | joy[1] : btn_up    | joy[3];
-wire m_down   = status[2] ? btn_right | joy[0] : btn_down  | joy[2];
-wire m_left   = status[2] ? btn_down  | joy[2] : btn_left  | joy[1];
-wire m_right  = status[2] ? btn_up    | joy[3] : btn_right | joy[0];
+wire m_up     =  btn_up    | joy[3];
+wire m_down   =  btn_down  | joy[2];
+wire m_left   =  btn_left  | joy[1];
+wire m_right  =  btn_right | joy[0];
 wire m_fire   = btn_fire | joy[4];
+wire m_gearup   =  joy[5];
+wire m_geardown   =  joy[6];
 
-wire m_start1 = btn_one_player  | joy[5];
-wire m_start2 = btn_two_players | joy[6];
+wire m_start1 = btn_one_player  | joy[7];
+wire m_start2 = btn_two_players | joy[8];
 wire m_coin   = m_start1 | m_start2;
 
 
-wire videowht,videoblk,compositesync,audio,lamp;
+
+/*
+-- Configuration DIP switches, these can be brought out to external switches if desired
+-- See Sprint 2 manual page 11 for complete information. Active low (0 = On, 1 = Off)
+--    1 								Oil slicks			(0 - Oil slicks enabled)
+--			2							Cycle tracks      (0/1 - Cycle every lap/every two laps)
+--   			3	4					Coins per play		(00 - 1 Coin per player) 
+--						5				Extended Play		(0 - Extended Play enabled)
+--							6			Not used				(X - Don't care)
+--								7	8	Game time			(01 - 120 Seconds)
+--SW1 <= "01000101"; -- Config dip switches
+
+Game Time:
+0 0 - 150 seconds
+0 1 - 120 seconds
+1 0 -  90 seconds
+1 1 - 60 seconds
+
+*/
+
+wire [7:0] SW1 = {status[1],status[2],1'b0,1'b0,status[3],1'b1,status[5:4]};
+
+wire [1:0] steer;
+
+joy2quad steer1
+(
+	.CLK(CLK_VIDEO),
+	.clkdiv('d128),
+	
+	.right(m_right),
+	.left(m_left),
+	
+	.steer(steer)
+);
+
+wire gear1,gear2,gear3;
+
+gearshift gearshift1
+(
+	.CLK(clk_12),
+	
+	.gearup(m_gearup),
+	.geardown(m_geardown),
+	
+	.gear1(gear1),
+	.gear2(gear2),
+	.gear3(gear3)
+
+);
+
+
+
+wire videowht,videoblk,compositesync,lamp;
 
 sprint1 sprint1(
 .Clk_50_I(CLK_50M),
-.Reset_n(~RESET),
+.Reset_n(~(RESET | status[0] | status[6] | buttons[1])),
+//.Video(video),
 .VideoW_O(videowht),
 .VideoB_O(videoblk),
+//.Video_R(videor),
 .Sync_O(compositesync),
 .Audio1_O(audio),
 .Coin1_I(~m_coin),
 .Coin2_I(~m_coin),
 .Start_I(~m_start1),
 			.Gas_I(~m_fire),
-			.Gear1_I(1),
-			.Gear2_I(1),
-			.Gear3_I(1),
+			.Gear1_I(gear1),
+			.Gear2_I(gear2),
+			.Gear3_I(gear3),
 			.Test_I	(1),
-			.SteerA_I(~m_right),
-			.SteerB_I(~m_left),
+			.SteerA_I(steer[1]),
+			.SteerB_I(steer[0]),
 			.StartLamp_O(lamp),
 			.hs_O(hs),
 			.vs_O(vs),
 		   .hblank_O(hblank),
 			.vblank_O(vblank),
 			.clk_12(clk_12),
-			.clk_6_O(CLK_VIDEO_2)
+			.clk_6_O(CLK_VIDEO_2),
+			.SW1_I(SW1)
 			);
 			
-
+wire [6:0] audio;
+wire [1:0] video;
+wire [3:0] videor;
 ///////////////////////////////////////////////////
 //wire clk_sys, clk_ram, clk_ram2, clk_pixel, locked;
 wire clk_sys,locked;
@@ -285,10 +347,15 @@ always @(posedge clk_sys) begin
 
 		//casex(sprint_vid)
 		casex({videowht,videoblk})
-	2'b01: vid_mono<=8'b10100000;
-	2'b10: vid_mono<=8'b01100001;
+	//2'b01: vid_mono<=8'b10100000;
+	//2'b10: vid_mono<=8'b01100001;
+	//2'b11: vid_mono<=8'b11111111;
+	//2'b00: vid_mono<=8'b00100000;
+	2'b01: vid_mono<=8'b01010000;
+	2'b10: vid_mono<=8'b10000110;
 	2'b11: vid_mono<=8'b11111111;
-	2'b00: vid_mono<=8'b00100000;
+	2'b00: vid_mono<=8'b00000000;
+	
 		endcase
 end
 
@@ -298,14 +365,27 @@ end
 //assign VGA_R={videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,1'b0,1'b0,1'b0};
 //assign VGA_G={videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,1'b0,1'b0,1'b0};
 //assign VGA_B={videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,1'b0,1'b0,1'b0};
+//assign VGA_R={video,video,video,video};
+//assign VGA_G={video,video,video,video};
+//assign VGA_B={video,video,video,video};
+
 assign VGA_R=vid_mono;
 assign VGA_G=vid_mono;
 assign VGA_B=vid_mono;
 
+
+
+//assign VGA_R={videor, 4'b0};
+//assign VGA_G={videor, 4'b0};
+//assign VGA_B={videor, 4'b0};
+
+
 assign VGA_DE=~(vblank | hblank);
 //assign VGA_B = 8'h00;
-assign AUDIO_L={audio,audio,audio,audio,audio,1'b0,1'b0,1'b0,8'b00000000};
-assign AUDIO_R={audio,audio,audio,audio,audio,1'b0,1'b0,1'b0,8'b00000000};
+assign AUDIO_L={audio,1'b0,8'b00000000};
+//assign AUDIO_L={audio,audio,audio,audio,audio,1'b0,1'b0,1'b0,8'b00000000};
+//assign AUDIO_R={audio,audio,audio,audio,audio,1'b0,1'b0,1'b0,8'b00000000};
+assign AUDIO_R=AUDIO_L;
 assign CLK_VIDEO=CLK_VIDEO_2;
 
 //assign SDRAM_CLK=ram_clock;

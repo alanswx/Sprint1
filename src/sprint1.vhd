@@ -31,10 +31,15 @@ entity sprint1 is
 port(		
 			Clk_50_I		: in	std_logic;	-- 50MHz input clock
 			Reset_n		: in	std_logic;	-- Reset button (Active low)
+			Audio1_O			: out std_logic_vector(6 downto 0);
+Video_R: out std_logic_vector(3 downto 0);
+Video_G: out std_logic_vector(3 downto 0);
+Video_B: out std_logic_vector(3 downto 0);
+
 			VideoW_O		: out std_logic;  -- White video output (680 Ohm)
 			VideoB_O		: out std_logic;	-- Black video output (1.2k)
 			Sync_O		: out std_logic;  -- Composite sync output (1.2k)
-			Audio1_O		: out std_logic;  -- Ideally this should have a simple low pass filter
+			--Audio1_O		: out std_logic;  -- Ideally this should have a simple low pass filter
 			Coin1_I		: in  std_logic;  -- Coin switches (Active low)
 			Coin2_I		: in  std_logic;
 			Start_I		: in  std_logic;  -- Start button
@@ -51,7 +56,9 @@ port(
 			hblank_O: out std_logic;
 			vblank_O: out std_logic;
 			clk_12: in std_logic;
-			clk_6_O: out std_logic
+			clk_6_O: out std_logic;
+			signal SW1_I				: in std_logic_vector(7 downto 0)
+
 			);
 			
 end sprint1;
@@ -143,11 +150,13 @@ signal NMI_n			: std_logic;
 
 signal Adr				: std_logic_vector(9 downto 0);
 
-signal SW1				: std_logic_vector(7 downto 0);
 
 signal Inputs			: std_logic_vector(1 downto 0);
 signal Collisions1	: std_logic_vector(1 downto 0);
 signal Collisions2	: std_logic_vector(1 downto 0);
+
+signal Vid_mono : std_logic_vector(3 downto 0);
+
 
 begin
 -- Configuration DIP switches, these can be brought out to external switches if desired
@@ -158,7 +167,7 @@ begin
 --						5				Extended Play		(0 - Extended Play enabled)
 --							6			Not used				(X - Don't care)
 --								7	8	Game time			(01 - 120 Seconds)
-SW1 <= "11000101"; -- Config dip switches
+--SW1 <= "01000101"; -- Config dip switches
 
 -- PLL to generate 12.096 MHz clock
 --PLL: entity work.clk_pll
@@ -269,7 +278,7 @@ port map(
 Input: entity work.Control_Inputs
 port map(
 		clk6 => clk_6,
-		SW1 => SW1, -- DIP switches
+		SW1 => SW1_I, -- DIP switches
 		Coin1_n => Coin1_I,
 		Coin2_n => Coin2_I,
 		Start => not Start_I, -- Active high in real hardware, inverting these makes more sense with the FPGA
@@ -306,7 +315,29 @@ port map(
 		
 -- Video mixing	
 VideoB_O <= (not(BlackPF_n and Car2_n and Car3_4_n)) nor CompBlank_s;	
-VideoW_O <= not(WhitePF_n and Car1_n);  
+VideoW_O <= not(WhitePF_n and Car1_n);
+
+
+--Video_R<=Vid_mono;
+--Video_G<=Vid_mono;
+--Video_B<=Vid_mono;
+
+--Video:process(SprintVid)
+--begin
+ -- case SprintVid_in is
+--     when "01" =>
+--	    Vid_mono<="0000";
+--    when "10" =>
+--	    Vid_mono<="1000";
+--    when "11" =>
+--	    Vid_mono<="1111";
+--    when others =>
+--	    Vid_mono<="0000";
+--  end case;
+--end process;
+
+
+
 Sync_O <= CompSync_n_s;
 
 		hs_O<= hsync;
