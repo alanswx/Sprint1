@@ -137,24 +137,10 @@ wire        ioctl_download;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire [7:0] ioctl_data;
-wire  [7:0] ioctl_index;
-reg         ioctl_wait=0;
-
-reg  [31:0] sd_lba;
-reg         sd_rd = 0;
-reg         sd_wr = 0;
-wire        sd_ack;
-wire  [7:0] sd_buff_addr;
-wire  [15:0] sd_buff_dout;
-wire  [15:0] sd_buff_din;
-wire        sd_buff_wr;
-wire        img_mounted;
-wire        img_readonly;
-wire [63:0] img_size;
 
 wire        forced_scandoubler;
 wire [10:0] ps2_key;
-wire [24:0] ps2_mouse;
+//wire [24:0] ps2_mouse;
 
 wire [15:0] joystick_0, joystick_1;
 wire [15:0] joy = joystick_0 | joystick_1;
@@ -352,12 +338,9 @@ assign CLK_VIDEO=CLK_VIDEO_2;
 pll pll (
 	 .refclk ( CLK_50M   ),
 	 .rst(0),
-	 .locked ( locked    ),        // PLL is running stable
-	 .outclk_0    (clk_sys),
-	 .outclk_1     ( clk_12   ),        // 25.175 MHz
-	 .outclk_2     (      ),        // 32 MHz
-	 .outclk_3     (      ),         // slightly phase shifted 32 MHz
-    .outclk_4 () //4mhz clock not shifted
+	 .locked 		( locked    ),        // PLL is running stable
+	 .outclk_0		( clk_sys	),
+	 .outclk_1		( clk_12		)        // 12 MHz
 	 );
 
 endmodule

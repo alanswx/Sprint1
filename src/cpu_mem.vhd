@@ -277,34 +277,7 @@ port map
 	address_b => A(10) & ADR(9 downto 0),
 	q_b       => rom4_dout
 );
--- Program ROMs
---A1: entity work.prog_rom1
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom1_dout
---		);
-		
---C1: entity work.prog_rom2
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom2_dout
---		);
 
---D1: entity work.prog_rom3
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom3_dout
---		);
-
---E1: entity work.prog_rom4
---port map(
---		clock => clk6,
---		address => A(10) & ADR(9 downto 0),
---		q => rom4_dout
---		);
 
 -- ROM data mux
 ROM_mux_in <= (ROM1 & ROM2 & ROM3 & ROM4);
@@ -358,13 +331,6 @@ end process;
 -- A15 and A14 are not used
 -- Original circuit uses a bipolar PROM in the address decoder, this could be replaced with combinational logic
 
--- E2 PROM 
---E2: entity work.addec_prom
---port map(
---	clock => clk12,
---	address => A(13 downto 9),
---	q => addec_bus
---	);
 
 E2 : work.dpram generic map (5,8)
 port map
