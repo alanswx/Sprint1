@@ -100,7 +100,7 @@ assign CE_PIXEL=1;
 
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
-//assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 
 //assign VIDEO_ARX = status[9] ? 8'd16 : 8'd4;
 //assign VIDEO_ARY = status[9] ? 8'd9  : 8'd3;
@@ -177,28 +177,11 @@ hps_io #(.STRLEN(($size(CONF_STR)>>3) )/*, .PS2DIV(1000), .WIDE(0)*/) hps_io
 	.status_set(region_set),
 
 	.ioctl_download(ioctl_download),
-	.ioctl_index(ioctl_index),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_data),
-	.ioctl_wait(ioctl_wait),
-
-	.sd_lba(sd_lba),
-	.sd_rd(sd_rd),
-	.sd_wr(sd_wr),
-	.sd_ack(sd_ack),
-	.sd_buff_addr(sd_buff_addr),
-	.sd_buff_dout(sd_buff_dout),
-	.sd_buff_din(sd_buff_din),
-	.sd_buff_wr(sd_buff_wr),
-	.img_mounted(img_mounted),
-	.img_readonly(img_readonly),
-	.img_size(img_size),
-
-	
 	
 	.ps2_key(ps2_key)
-	//.ps2_mouse(ps2_mouse)
 );
 
 
@@ -211,8 +194,8 @@ always @(posedge clk_sys) begin
 	
 	if(old_state != ps2_key[10]) begin
 		casex(code)
-			'hX75: btn_up          <= pressed; // up
-			'hX72: btn_down        <= pressed; // down
+//			'hX75: btn_up          <= pressed; // up
+//			'hX72: btn_down        <= pressed; // down
 			'hX6B: btn_left        <= pressed; // left
 			'hX74: btn_right       <= pressed; // right
 			'h029: btn_fire        <= pressed; // space
@@ -224,16 +207,16 @@ always @(posedge clk_sys) begin
 	end
 end
 
-reg btn_up    = 0;
-reg btn_down  = 0;
+//reg btn_up    = 0;
+//reg btn_down  = 0;
 reg btn_right = 0;
 reg btn_left  = 0;
 reg btn_fire  = 0;
 reg btn_one_player  = 0;
 reg btn_two_players = 0;
 
-wire m_up     =  btn_up    | joy[3];
-wire m_down   =  btn_down  | joy[2];
+//wire m_up     =  btn_up    | joy[3];
+//wire m_down   =  btn_down  | joy[2];
 wire m_left   =  btn_left  | joy[1];
 wire m_right  =  btn_right | joy[0];
 wire m_fire   = btn_fire | joy[4];
@@ -300,33 +283,37 @@ gearshift gearshift1
 wire videowht,videoblk,compositesync,lamp;
 
 sprint1 sprint1(
-.Clk_50_I(CLK_50M),
-.Reset_n(~(RESET | status[0] | status[6] | buttons[1])),
-//.Video(video),
-.VideoW_O(videowht),
-.VideoB_O(videoblk),
-//.Video_R(videor),
-.Sync_O(compositesync),
-.Audio1_O(audio),
-.Coin1_I(~m_coin),
-.Coin2_I(~m_coin),
-.Start_I(~m_start1),
-			.Gas_I(~m_fire),
-			.Gear1_I(gear1),
-			.Gear2_I(gear2),
-			.Gear3_I(gear3),
-			.Test_I	(1),
-			.SteerA_I(steer[1]),
-			.SteerB_I(steer[0]),
-			.StartLamp_O(lamp),
-			.hs_O(hs),
-			.vs_O(vs),
-		   .hblank_O(hblank),
-			.vblank_O(vblank),
-			.clk_12(clk_12),
-			.clk_6_O(CLK_VIDEO_2),
-			.SW1_I(SW1)
-			);
+	.Clk_50_I(CLK_50M),
+	.Reset_n(~(RESET | status[0] | status[6] | buttons[1] | ioctl_download)),
+
+	.dn_addr(ioctl_addr[16:0]),
+	.dn_data(ioctl_data),
+	.dn_wr(ioctl_wr),
+
+	.VideoW_O(videowht),
+	.VideoB_O(videoblk),
+
+	.Sync_O(compositesync),
+	.Audio1_O(audio),
+	.Coin1_I(~m_coin),
+	.Coin2_I(~m_coin),
+	.Start_I(~m_start1),
+	.Gas_I(~m_fire),
+	.Gear1_I(gear1),
+	.Gear2_I(gear2),
+	.Gear3_I(gear3),
+	.Test_I	(1),
+	.SteerA_I(steer[1]),
+	.SteerB_I(steer[0]),
+	.StartLamp_O(lamp),
+	.hs_O(hs),
+	.vs_O(vs),
+	.hblank_O(hblank),
+	.vblank_O(vblank),
+	.clk_12(clk_12),
+	.clk_6_O(CLK_VIDEO_2),
+	.SW1_I(SW1)
+	);
 			
 wire [6:0] audio;
 wire [1:0] video;
@@ -344,47 +331,20 @@ wire[1:0] sprint_vid;
 
 //assign sprint_vid = {videowht,videoblk};
 always @(posedge clk_sys) begin
-
-		//casex(sprint_vid)
 		casex({videowht,videoblk})
-	//2'b01: vid_mono<=8'b10100000;
-	//2'b10: vid_mono<=8'b01100001;
-	//2'b11: vid_mono<=8'b11111111;
-	//2'b00: vid_mono<=8'b00100000;
-	2'b01: vid_mono<=8'b01010000;
-	2'b10: vid_mono<=8'b10000110;
-	2'b11: vid_mono<=8'b11111111;
-	2'b00: vid_mono<=8'b00000000;
-	
+			2'b01: vid_mono<=8'b01010000;
+			2'b10: vid_mono<=8'b10000110;
+			2'b11: vid_mono<=8'b11111111;
+			2'b00: vid_mono<=8'b00000000;
 		endcase
 end
-
-//assign VGA_R={videowht,videowht,videowht,videowht,videowht,1'b0,1'b0,1'b0};
-//assign VGA_G={~videoblk,~videoblk,~videoblk,~videoblk,~videoblk,1'b0,1'b0,1'b0};
-//assign VGA_B=0;
-//assign VGA_R={videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,1'b0,1'b0,1'b0};
-//assign VGA_G={videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,1'b0,1'b0,1'b0};
-//assign VGA_B={videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,videowht|videoblk,1'b0,1'b0,1'b0};
-//assign VGA_R={video,video,video,video};
-//assign VGA_G={video,video,video,video};
-//assign VGA_B={video,video,video,video};
 
 assign VGA_R=vid_mono;
 assign VGA_G=vid_mono;
 assign VGA_B=vid_mono;
 
-
-
-//assign VGA_R={videor, 4'b0};
-//assign VGA_G={videor, 4'b0};
-//assign VGA_B={videor, 4'b0};
-
-
 assign VGA_DE=~(vblank | hblank);
-//assign VGA_B = 8'h00;
 assign AUDIO_L={audio,1'b0,8'b00000000};
-//assign AUDIO_L={audio,audio,audio,audio,audio,1'b0,1'b0,1'b0,8'b00000000};
-//assign AUDIO_R={audio,audio,audio,audio,audio,1'b0,1'b0,1'b0,8'b00000000};
 assign AUDIO_R=AUDIO_L;
 assign CLK_VIDEO=CLK_VIDEO_2;
 
@@ -395,9 +355,9 @@ pll pll (
 	 .locked ( locked    ),        // PLL is running stable
 	 .outclk_0    (clk_sys),
 	 .outclk_1     ( clk_12   ),        // 25.175 MHz
-	 .outclk_2     ( ram_clock     ),        // 32 MHz
-	 .outclk_3     ( SDRAM_CLK     ),         // slightly phase shifted 32 MHz
-    .outclk_4 (cpu_clock_2) //4mhz clock not shifted
+	 .outclk_2     (      ),        // 32 MHz
+	 .outclk_3     (      ),         // slightly phase shifted 32 MHz
+    .outclk_4 () //4mhz clock not shifted
 	 );
 
 endmodule

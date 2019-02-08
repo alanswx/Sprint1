@@ -33,7 +33,8 @@ port(
 			CompSync_n_s	: out std_logic; -- COMP SYNC* on schematic
 			CompBlank_s		: out std_logic; -- COMP BLANK* on schematic
 			WhitePF_n		: out	std_logic; 
-			BlackPF_n		: out	std_logic 
+			BlackPF_n		: out	std_logic
+			
 			);
 end playfield;
 
@@ -99,6 +100,7 @@ port map(
 	Address => char_addr,
 	q => char_data(3 downto 0) 
 	);
+
 
 P4: entity work.Char_LSB
 port map(
