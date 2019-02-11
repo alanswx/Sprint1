@@ -124,6 +124,7 @@ localparam CONF_STR = {
 	"O2,Cycle tracks,every lap,every two laps;",
 	"O3,Extended Play,extended,normal;",
 	"O45,Game time,150 Sec,120 Sec,90 Sec,60 Sec;",
+	"O7,Test,Off,On;",
 	"-;",
 	"T6,Reset;",
 	"J,Gas,GearUp,GearDown,Start 1P,Start 2P;",
@@ -254,6 +255,7 @@ wire gear1,gear2,gear3;
 gearshift gearshift1
 (
 	.CLK(clk_12),
+	.reset(m_start1|m_start2),
 	
 	.gearup(m_gearup),
 	.geardown(m_geardown),
@@ -288,7 +290,7 @@ sprint1 sprint1(
 	.Gear1_I(gear1),
 	.Gear2_I(gear2),
 	.Gear3_I(gear3),
-	.Test_I	(1),
+	.Test_I	(~status[7]),
 	.SteerA_I(steer[1]),
 	.SteerB_I(steer[0]),
 	.StartLamp_O(lamp),

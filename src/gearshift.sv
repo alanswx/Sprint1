@@ -13,9 +13,11 @@
 module gearshift
 (
 	input CLK,
+	input reset,
 	
 	input gearup,
 	input geardown,
+	
 	
 	output gear1,
 	output gear2,
@@ -28,6 +30,9 @@ always @(posedge CLK) begin
   	reg old_gear_up;
 	reg old_gear_down;
 	
+	if (reset)
+		gear=0;
+		
 	if (gearup==1)
 	begin
 	   if (old_gear_up==0)
