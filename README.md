@@ -10,6 +10,13 @@ The original Sprint game had a steering wheel with a quadrature encoder. This ve
    F1          : Coin + Start 1P
    F2          : Coin + Start 2P
    LEFT,RIGHT arrows : Steering
+
+   MAME/IPAC/JPAC Style Keyboard inputs:
+     5           : Coin 1
+     6           : Coin 2
+     1           : Start 1 Player
+     2           : Start 2 Players
+     D,G         : Player 2 Movements
    
 
  Joystick support. (Converts the digital joystick to a simulated quadrature encoding)
