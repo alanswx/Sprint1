@@ -31,7 +31,16 @@ port(
 			vblank_n_s	: out std_logic;
 			vblank		: out	std_logic;
 			vsync			: out std_logic;
-			vreset		: out	std_logic);
+			vreset		: out	std_logic;
+			
+			--signals that carry the ROM data from the MiSTer disk
+			dn_addr        	: in  std_logic_vector(15 downto 0);
+			dn_data        	: in  std_logic_vector(7 downto 0);
+			dn_wr          	: in  std_logic;
+			rom_sync_prom_cs  : in std_logic
+
+			
+			);
 end synchronizer;
 
 architecture rtl of synchronizer is
@@ -99,12 +108,25 @@ end process;
 
 -- Many Atari raster games use a 256 x 4 bit prom to decode vertical sync signals
 -- This could be replaced by combinatorial logic
-M2: entity work.sync_prom
-port map(
-		clock => clk_12, 
-		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
-		q => sync_bus
-		);
+--M2: entity work.sync_prom
+--port map(
+--		clock => clk_12, 
+--		address => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
+--		q => sync_bus
+--		);
+M2 : work.dpram generic map (8,8)
+port map
+(
+	clock_a   => clk_12,
+	wren_a    => dn_wr and rom_sync_prom_cs,
+	address_a => dn_addr(7 downto 0),
+	data_a    => dn_data,
+
+	clock_b   => clk_12,
+	address_b => sync_reg(3) & V128 & V64 & V16 & V8 & V4 & V2 & V1,
+	q_b(3 downto 0)       => sync_bus 
+);
+
 
 -- Register fed by the sync PROM, in the original hardware this also creates the complements of these signals
 sync_register: process(hsync_int)

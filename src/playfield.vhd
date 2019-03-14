@@ -21,6 +21,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 entity playfield is 
 port(   
 			Clk6				: in	std_logic;
+			Clk12				: in	std_logic;
 			Display			: in	std_logic_vector(7 downto 0);
 			HCount			: in  std_logic_vector(8 downto 0);
 			VCount			: in  std_logic_vector(7 downto 0);
@@ -33,7 +34,14 @@ port(
 			CompSync_n_s	: out std_logic; -- COMP SYNC* on schematic
 			CompBlank_s		: out std_logic; -- COMP BLANK* on schematic
 			WhitePF_n		: out	std_logic; 
-			BlackPF_n		: out	std_logic
+			BlackPF_n		: out	std_logic;
+			
+			-- signals that carry the ROM data from the MiSTer disk
+			dn_addr        	: in  std_logic_vector(15 downto 0);
+			dn_data        	: in  std_logic_vector(7 downto 0);
+			dn_wr          	: in  std_logic;
+			rom_LSB_cs   		: in std_logic;
+			rom_MSB_cs   		: in std_logic
 			
 			);
 end playfield;
@@ -69,7 +77,7 @@ signal A6_3				: std_logic;
 
 begin
 
--- Video synchronization signals
+-- Video synchronization 			s
 H1 <= Hcount(0);
 H2 <= Hcount(1);
 H4 <= Hcount(2);
@@ -94,20 +102,46 @@ P3_6 <= (HBlank or VBlank);
 char_addr <= display(5 downto 0) & V4 & V2 & V1;
 
 -- Background character ROMs
-R4: entity work.Char_MSB
-port map(
-	clock => clk6,
-	Address => char_addr,
-	q => char_data(3 downto 0) 
-	);
+--R4: entity work.Char_MSB
+--port map(
+--	clock => clk6,
+--	Address => char_addr,
+--	q => char_data(3 downto 0) 
+--	);
 
 
-P4: entity work.Char_LSB
-port map(
-	clock => clk6,
-	Address => char_addr,
-	q => char_data(7 downto 4) 
-	);
+R4 : work.dpram generic map (9,8)
+port map
+(
+	clock_a   => clk12,
+	wren_a    => dn_wr and rom_MSB_cs,
+	address_a => dn_addr(8 downto 0),
+	data_a    => dn_data,
+
+	clock_b   => clk6,
+	address_b => char_addr,
+	q_b(3 downto 0)       => char_data(3 downto 0) 
+);
+
+
+--P4: entity work.Char_LSB
+--port map(
+--	clock => clk6,
+--	Address => char_addr,
+--	q => char_data(7 downto 4) 
+--	);
+P4 : work.dpram generic map (9,8)
+port map
+(
+	clock_a   => clk12,
+	wren_a    => dn_wr and rom_LSB_cs,
+	address_a => dn_addr(8 downto 0),
+	data_a    => dn_data,
+
+	clock_b   => clk6,
+	address_b => char_addr,
+	q_b(3 downto 0)       => char_data(7 downto 4) 
+);
 
 
 -- 74LS166 video shift register	
