@@ -36,7 +36,7 @@ port(
 			Car2_n  		: out std_logic;
 			Car3_4_n  	: out std_logic;
 			
-			-- 			s that carry the ROM data from the MiSTer disk
+			-- signals that carry the ROM data from the MiSTer disk
 			dn_addr     : in  std_logic_vector(15 downto 0);
 			dn_data     : in  std_logic_vector(7 downto 0);
 			dn_wr       : in  std_logic;
@@ -127,21 +127,6 @@ begin
 	end if;
 end process;
 
-
--- Motion object PROMs - These contain the car images for all 32 possible orientations
---J6: entity work.j6_prom
---port map(
---	clock => clk6,
---	address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
---	q => Vid(7 downto 4)
---	);
-
---K6: entity work.k6_prom
---port map(
---	clock => clk6,
---	address => Display(7 downto 3) & L5_reg(2 downto 0) & phi2,
---	q => Vid(3 downto 0)
---	);
 
 J6 : work.dpram generic map (9,8)
 port map

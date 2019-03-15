@@ -65,7 +65,7 @@ module emu
 
 assign LED_USER  = ioctl_download;
 assign LED_DISK  = 0;
-assign LED_POWER = 0;
+assign LED_POWER = lamp;
 
 assign HDMI_ARX = status[1] ? 8'd16 : 8'd4;
 assign HDMI_ARY = status[1] ? 8'd9  : 8'd3;
@@ -91,12 +91,13 @@ localparam CONF_STR = {
 
 wire [31:0] status;
 wire  [1:0] buttons;
+wire        forced_scandoubler;
+
 wire        ioctl_download;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire [7:0] ioctl_data;
 
-wire        forced_scandoubler;
 wire [10:0] ps2_key;
 
 wire [15:0] joystick_0, joystick_1;
@@ -266,7 +267,7 @@ sprint1 sprint1(
 			
 wire [6:0] audio;
 wire [1:0] video;
-wire [3:0] videor;
+
 ///////////////////////////////////////////////////
 wire clk_24,clk_12,CLK_VIDEO_2;
 wire clk_sys,locked;
@@ -275,7 +276,8 @@ wire[1:0] sprint_vid;
 
 always @(posedge clk_sys) begin
 		casex({videowht,videoblk})
-			2'b01: vid_mono<=8'b01010000;
+			//2'b01: vid_mono<=8'b01010000;
+			2'b01: vid_mono<=8'b01110000;
 			2'b10: vid_mono<=8'b10000110;
 			2'b11: vid_mono<=8'b11111111;
 			2'b00: vid_mono<=8'b00000000;
@@ -284,7 +286,7 @@ end
 
 assign r=vid_mono[7:5];
 assign g=vid_mono[7:5];
-assign b=vid_mono[7:6];
+assign b=vid_mono[7:5];
 
 assign AUDIO_L={audio,1'b0,8'b00000000};
 assign AUDIO_R=AUDIO_L;
@@ -293,7 +295,7 @@ assign AUDIO_S = 0;
 wire hblank, vblank;
 wire hs, vs;
 wire [2:0] r,g;
-wire [1:0] b;
+wire [2:0] b;
 
 reg ce_pix;
 always @(posedge clk_24) begin
@@ -303,7 +305,7 @@ always @(posedge clk_24) begin
         ce_pix <= old_clk & ~CLK_VIDEO_2;
 end
 
-arcade_fx #(298,8) arcade_video
+arcade_fx #(298,9) arcade_video
 (
         .*,
 
