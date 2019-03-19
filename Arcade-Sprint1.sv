@@ -84,7 +84,7 @@ localparam CONF_STR = {
 	"OD,Test,Off,On;",
 	"-;",
 	"R0,Reset;",
-	"J,Gas,GearUp,GearDown,Start 1P,Start 2P;",
+	"J1,Gas,GearUp,GearDown,Start 1P,Start 2P;",
 	"V,v",`BUILD_DATE
 };
 
@@ -138,8 +138,9 @@ always @(posedge clk_sys) begin
 //			'hX72: btn_down        <= pressed; // down
 			'hX6B: btn_left        <= pressed; // left
 			'hX74: btn_right       <= pressed; // right
-			'h029: btn_fire        <= pressed; // space
-			'h014: btn_fire        <= pressed; // ctrl
+			'h014: btn_gas         <= pressed; // ctrl
+			'h011: btn_gearup      <= pressed; // Lalt
+			'h029: btn_geardown    <= pressed; // space
 
 			'h005: btn_one_player  <= pressed; // F1
 			'h006: btn_two_players <= pressed; // F2
@@ -155,7 +156,10 @@ end
 //reg btn_down  = 0;
 reg btn_right = 0;
 reg btn_left  = 0;
-reg btn_fire  = 0;
+reg btn_gas  = 0;
+reg btn_gearup  = 0;
+reg btn_geardown  = 0;
+
 reg btn_one_player  = 0;
 reg btn_two_players = 0;
 
@@ -166,11 +170,11 @@ reg btn_coin_2=0;
 
 //wire m_up     =  btn_up    | joy[3];
 //wire m_down   =  btn_down  | joy[2];
-wire m_left   =  btn_left  | joy[1];
-wire m_right  =  btn_right | joy[0];
-wire m_fire   = btn_fire | joy[4];
-wire m_gearup   =  joy[5];
-wire m_geardown   =  joy[6];
+wire m_left     =  btn_left   | joy[1];
+wire m_right    =  btn_right  | joy[0];
+wire m_gas      =  btn_gas    | joy[4];
+wire m_gearup   =  btn_gearup |joy[5];
+wire m_geardown =  btn_geardown | joy[6];
 
 wire m_start1 = btn_one_player  | joy[7];
 wire m_start2 = btn_two_players | joy[8];
@@ -203,7 +207,7 @@ wire [1:0] steer;
 
 joy2quad steer1
 (
-	.CLK(clk_sys),
+	.CLK(CLK_VIDEO_2),
 	.clkdiv('d22500),
 	
 	.right(m_right),
@@ -216,7 +220,7 @@ wire gear1,gear2,gear3;
 
 gearshift gearshift1
 (
-	.CLK(clk_12),
+	.CLK(CLK_VIDEO_2),
 	.reset(m_start1|m_start2),
 	
 	.gearup(m_gearup),
@@ -248,7 +252,7 @@ sprint1 sprint1(
 	.Coin1_I(~(m_coin|btn_coin_1)),
 	.Coin2_I(~(m_coin|btn_coin_2)),
 	.Start_I(~(m_start1|btn_start_1)),
-	.Gas_I(~m_fire),
+	.Gas_I(~m_gas),
 	.Gear1_I(gear1),
 	.Gear2_I(gear2),
 	.Gear3_I(gear3),
@@ -305,7 +309,7 @@ always @(posedge clk_24) begin
         ce_pix <= old_clk & ~CLK_VIDEO_2;
 end
 
-arcade_fx #(298,9) arcade_video
+arcade_fx #(320,9) arcade_video
 (
         .*,
 
